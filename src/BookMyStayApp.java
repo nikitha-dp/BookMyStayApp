@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 public class BookMyStayApp {
     public static void main(String[] args) {
@@ -7,9 +8,9 @@ public class BookMyStayApp {
 
         // Initialize inventory
         RoomInventory inventory = new RoomInventory();
-        inventory.addRoomType("Single Room", 5);
-        inventory.addRoomType("Double Room", 3);
-        inventory.addRoomType("Deluxe Room", 2);
+        inventory.addRoomType("Single Room", 2);
+        inventory.addRoomType("Double Room", 1);
+        inventory.addRoomType("Deluxe Room", 1);
 
         // Create room objects
         ArrayList<Room> rooms = new ArrayList<>();
@@ -24,20 +25,22 @@ public class BookMyStayApp {
         // Booking request queue
         BookingRequestQueue queue = new BookingRequestQueue();
 
-        // Guests submit booking requests
         queue.addRequest(new Reservation("Rahul", "Single Room"));
         queue.addRequest(new Reservation("Anita", "Double Room"));
-        queue.addRequest(new Reservation("Karan", "Deluxe Room"));
+        queue.addRequest(new Reservation("Karan", "Single Room"));
+        queue.addRequest(new Reservation("Priya", "Deluxe Room"));
 
-        // Show queued requests
         queue.displayRequests();
 
-        System.out.println("\nRequests waiting for allocation...");
-        System.out.println("Application Closed.");
+        // Process bookings
+        BookingService bookingService = new BookingService();
+        bookingService.processBookings(queue, inventory);
+
+        System.out.println("\nApplication Closed.");
     }
 }
 
-/* ---------------- INVENTORY ---------------- */
+/* ---------------- INVENTORY SERVICE ---------------- */
 
 class RoomInventory {
 
@@ -49,6 +52,11 @@ class RoomInventory {
 
     int getAvailability(String roomType) {
         return inventory.getOrDefault(roomType, 0);
+    }
+
+    void decreaseRoom(String roomType) {
+        int count = inventory.get(roomType);
+        inventory.put(roomType, count - 1);
     }
 }
 
@@ -150,7 +158,7 @@ class Reservation {
     }
 }
 
-/* ---------------- BOOKING QUEUE ---------------- */
+/* ---------------- BOOKING REQUEST QUEUE ---------------- */
 
 class BookingRequestQueue {
 
@@ -159,6 +167,14 @@ class BookingRequestQueue {
     void addRequest(Reservation reservation) {
         queue.add(reservation);
         System.out.println("Booking request added for " + reservation.guestName);
+    }
+
+    Reservation getNextRequest() {
+        return queue.poll();
+    }
+
+    boolean hasRequests() {
+        return !queue.isEmpty();
     }
 
     void displayRequests() {
@@ -170,3 +186,42 @@ class BookingRequestQueue {
         }
     }
 }
+
+/* ---------------- BOOKING SERVICE ---------------- */
+
+class BookingService {
+
+    private int roomCounter = 100;
+
+    void processBookings(BookingRequestQueue queue, RoomInventory inventory) {
+
+        System.out.println("\nProcessing Booking Requests\n");
+
+        while (queue.hasRequests()) {
+
+            Reservation request = queue.getNextRequest();
+
+            int available = inventory.getAvailability(request.roomType);
+
+            if (available > 0) {
+
+                String roomID = request.roomType.substring(0,2).toUpperCase() + roomCounter++;
+
+                inventory.decreaseRoom(request.roomType);
+
+                System.out.println("Booking Confirmed");
+                System.out.println("Guest: " + request.guestName);
+                System.out.println("Room Type: " + request.roomType);
+                System.out.println("Room ID: " + roomID);
+                System.out.println();
+
+            } else {
+
+                System.out.println("Booking Failed for " + request.guestName +
+                        " (No " + request.roomType + " available)");
+                System.out.println();
+            }
+        }
+    }
+}
+    }
