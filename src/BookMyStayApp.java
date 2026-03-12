@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BookMyStayApp {
@@ -6,49 +7,40 @@ public class BookMyStayApp {
 
         // Initialize inventory
         RoomInventory inventory = new RoomInventory();
-
-        // Register room types
         inventory.addRoomType("Single Room", 5);
         inventory.addRoomType("Double Room", 3);
-        inventory.addRoomType("Deluxe Room", 2);
+        inventory.addRoomType("Deluxe Room", 0); // Example unavailable room
 
         // Create room objects
-        Room single = new SingleRoom(inventory);
-        Room doubleRoom = new DoubleRoom(inventory);
-        Room deluxe = new DeluxeRoom(inventory);
+        ArrayList<Room> rooms = new ArrayList<>();
+        rooms.add(new SingleRoom(inventory));
+        rooms.add(new DoubleRoom(inventory));
+        rooms.add(new DeluxeRoom(inventory));
 
-        System.out.println("Available Room Types\n");
+        // Guest initiates search
+        SearchService searchService = new SearchService();
+        searchService.displayAvailableRooms(rooms);
 
-        single.displayRoomDetails();
-        doubleRoom.displayRoomDetails();
-        deluxe.displayRoomDetails();
-
-        System.out.println("Application Closed.");
+        System.out.println("\nApplication Closed.");
     }
 }
 
+/* ---------------- INVENTORY ---------------- */
 
 class RoomInventory {
 
     private HashMap<String, Integer> inventory = new HashMap<>();
 
-    // Register room type
     void addRoomType(String roomType, int count) {
         inventory.put(roomType, count);
     }
 
-    // Get availability
     int getAvailability(String roomType) {
-        return inventory.get(roomType);
-    }
-
-    // Update availability
-    void updateAvailability(String roomType, int newCount) {
-        inventory.put(roomType, newCount);
+        return inventory.getOrDefault(roomType, 0);
     }
 }
 
-
+/* ---------------- ABSTRACT ROOM ---------------- */
 
 abstract class Room {
 
@@ -62,10 +54,14 @@ abstract class Room {
         this.inventory = inventory;
     }
 
+    int getAvailableRooms() {
+        return inventory.getAvailability(roomType);
+    }
+
     abstract void displayRoomDetails();
 }
 
-
+/* ---------------- ROOM TYPES ---------------- */
 
 class SingleRoom extends Room {
 
@@ -76,12 +72,10 @@ class SingleRoom extends Room {
     void displayRoomDetails() {
         System.out.println("Room Type: " + roomType);
         System.out.println("Price: ₹" + price);
-        System.out.println("Available Rooms: " + inventory.getAvailability(roomType));
+        System.out.println("Available Rooms: " + getAvailableRooms());
         System.out.println();
     }
 }
-
-
 
 class DoubleRoom extends Room {
 
@@ -92,12 +86,10 @@ class DoubleRoom extends Room {
     void displayRoomDetails() {
         System.out.println("Room Type: " + roomType);
         System.out.println("Price: ₹" + price);
-        System.out.println("Available Rooms: " + inventory.getAvailability(roomType));
+        System.out.println("Available Rooms: " + getAvailableRooms());
         System.out.println();
     }
 }
-
-
 
 class DeluxeRoom extends Room {
 
@@ -108,7 +100,24 @@ class DeluxeRoom extends Room {
     void displayRoomDetails() {
         System.out.println("Room Type: " + roomType);
         System.out.println("Price: ₹" + price);
-        System.out.println("Available Rooms: " + inventory.getAvailability(roomType));
+        System.out.println("Available Rooms: " + getAvailableRooms());
         System.out.println();
+    }
+}
+
+/* ---------------- SEARCH SERVICE ---------------- */
+
+class SearchService {
+
+    void displayAvailableRooms(ArrayList<Room> rooms) {
+
+        System.out.println("Available Room Types\n");
+
+        for (Room room : rooms) {
+
+            if (room.getAvailableRooms() > 0) {
+                room.displayRoomDetails();
+            }
+        }
     }
 }
