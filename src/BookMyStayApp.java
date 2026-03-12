@@ -31,26 +31,21 @@ public class BookMyStayApp {
         BookingService bookingService = new BookingService();
         List<ConfirmedReservation> confirmed = bookingService.processBookings(queue, inventory);
 
-        AddOnServiceManager addOnManager = new AddOnServiceManager();
+        /* ----------- BOOKING HISTORY ----------- */
 
-        AddOnService breakfast = new AddOnService("Breakfast", 300);
-        AddOnService airportPickup = new AddOnService("Airport Pickup", 800);
-        AddOnService spa = new AddOnService("Spa Access", 1200);
+        BookingHistory history = new BookingHistory();
 
         for (ConfirmedReservation r : confirmed) {
-
-            if (r.guestName.equals("Rahul")) {
-                addOnManager.addService(r.roomID, breakfast);
-                addOnManager.addService(r.roomID, spa);
-            }
-
-            if (r.guestName.equals("Anita")) {
-                addOnManager.addService(r.roomID, airportPickup);
-            }
+            history.addReservation(r);
         }
 
-        System.out.println("\nAdd-On Service Summary\n");
-        addOnManager.printServices();
+        /* ----------- REPORTING ----------- */
+
+        BookingReportService reportService = new BookingReportService();
+
+        System.out.println("\nAdmin Requested Booking Report\n");
+
+        reportService.printBookingHistory(history);
 
         System.out.println("\nApplication Closed.");
     }
@@ -186,7 +181,7 @@ class ConfirmedReservation {
     }
 }
 
-/* ---------------- QUEUE ---------------- */
+/* ---------------- BOOKING QUEUE ---------------- */
 
 class BookingRequestQueue {
 
@@ -259,48 +254,35 @@ class BookingService {
     }
 }
 
-/* ---------------- ADD ON SERVICE ---------------- */
+/* ---------------- BOOKING HISTORY ---------------- */
 
-class AddOnService {
+class BookingHistory {
 
-    String serviceName;
-    int price;
+    private LinkedList<ConfirmedReservation> history = new LinkedList<>();
 
-    AddOnService(String serviceName, int price) {
-        this.serviceName = serviceName;
-        this.price = price;
+    void addReservation(ConfirmedReservation reservation) {
+        history.add(reservation);
+    }
+
+    List<ConfirmedReservation> getHistory() {
+        return history;
     }
 }
 
-/* ---------------- ADD ON MANAGER ---------------- */
+/* ---------------- REPORT SERVICE ---------------- */
 
-class AddOnServiceManager {
+class BookingReportService {
 
-    private HashMap<String, List<AddOnService>> addOns = new HashMap<>();
+    void printBookingHistory(BookingHistory history) {
 
-    void addService(String reservationID, AddOnService service) {
+        System.out.println("Booking History Report\n");
 
-        addOns.putIfAbsent(reservationID, new ArrayList<>());
-        addOns.get(reservationID).add(service);
-    }
+        for (ConfirmedReservation r : history.getHistory()) {
 
-    void printServices() {
-
-        for (String reservationID : addOns.keySet()) {
-
-            int total = 0;
-
-            System.out.println("Reservation ID: " + reservationID);
-
-            for (AddOnService s : addOns.get(reservationID)) {
-
-                System.out.println("  Service: " + s.serviceName + " ₹" + s.price);
-                total += s.price;
-            }
-
-            System.out.println("  Total Add-On Cost: ₹" + total);
+            System.out.println("Guest: " + r.guestName);
+            System.out.println("Room Type: " + r.roomType);
+            System.out.println("Room ID: " + r.roomID);
             System.out.println();
         }
     }
 }
-
