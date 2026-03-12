@@ -9,7 +9,7 @@ public class BookMyStayApp {
         RoomInventory inventory = new RoomInventory();
         inventory.addRoomType("Single Room", 5);
         inventory.addRoomType("Double Room", 3);
-        inventory.addRoomType("Deluxe Room", 0); // Example unavailable room
+        inventory.addRoomType("Deluxe Room", 2);
 
         // Create room objects
         ArrayList<Room> rooms = new ArrayList<>();
@@ -17,11 +17,23 @@ public class BookMyStayApp {
         rooms.add(new DoubleRoom(inventory));
         rooms.add(new DeluxeRoom(inventory));
 
-        // Guest initiates search
-        SearchService searchService = new SearchService();
-        searchService.displayAvailableRooms(rooms);
+        // Guest searches rooms
+        SearchService search = new SearchService();
+        search.displayAvailableRooms(rooms);
 
-        System.out.println("\nApplication Closed.");
+        // Booking request queue
+        BookingRequestQueue queue = new BookingRequestQueue();
+
+        // Guests submit booking requests
+        queue.addRequest(new Reservation("Rahul", "Single Room"));
+        queue.addRequest(new Reservation("Anita", "Double Room"));
+        queue.addRequest(new Reservation("Karan", "Deluxe Room"));
+
+        // Show queued requests
+        queue.displayRequests();
+
+        System.out.println("\nRequests waiting for allocation...");
+        System.out.println("Application Closed.");
     }
 }
 
@@ -114,10 +126,47 @@ class SearchService {
         System.out.println("Available Room Types\n");
 
         for (Room room : rooms) {
-
             if (room.getAvailableRooms() > 0) {
                 room.displayRoomDetails();
             }
+        }
+    }
+}
+
+/* ---------------- RESERVATION ---------------- */
+
+class Reservation {
+
+    String guestName;
+    String roomType;
+
+    Reservation(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
+    }
+
+    void display() {
+        System.out.println("Guest: " + guestName + " | Requested Room: " + roomType);
+    }
+}
+
+/* ---------------- BOOKING QUEUE ---------------- */
+
+class BookingRequestQueue {
+
+    private LinkedList<Reservation> queue = new LinkedList<>();
+
+    void addRequest(Reservation reservation) {
+        queue.add(reservation);
+        System.out.println("Booking request added for " + reservation.guestName);
+    }
+
+    void displayRequests() {
+
+        System.out.println("\nCurrent Booking Queue:");
+
+        for (Reservation r : queue) {
+            r.display();
         }
     }
 }
