@@ -22,24 +22,25 @@ public class BookMyStayApp {
 
         BookingRequestQueue queue = new BookingRequestQueue();
 
-        queue.addRequest(new Reservation("Rahul", "Single Room"));
-        queue.addRequest(new Reservation("Anita", "Double Room"));
-        queue.addRequest(new Reservation("Karan", "Single Room"));
+        InvalidBookingValidator validator = new InvalidBookingValidator(inventory);
+
+        /* -------- Booking Requests With Validation -------- */
+
+        validator.validateAndAdd("Rahul", "Single Room", queue);
+        validator.validateAndAdd("Anita", "Double Room", queue);
+        validator.validateAndAdd("", "Single Room", queue);        // invalid name
+        validator.validateAndAdd("Karan", "Presidential", queue);  // invalid room
 
         queue.displayRequests();
 
         BookingService bookingService = new BookingService();
         List<ConfirmedReservation> confirmed = bookingService.processBookings(queue, inventory);
 
-        /* ----------- BOOKING HISTORY ----------- */
-
         BookingHistory history = new BookingHistory();
 
         for (ConfirmedReservation r : confirmed) {
             history.addReservation(r);
         }
-
-        /* ----------- REPORTING ----------- */
 
         BookingReportService reportService = new BookingReportService();
 
@@ -51,6 +52,37 @@ public class BookMyStayApp {
     }
 }
 
+/* ---------------- VALIDATOR ---------------- */
+
+class InvalidBookingValidator {
+
+    private RoomInventory inventory;
+
+    InvalidBookingValidator(RoomInventory inventory) {
+        this.inventory = inventory;
+    }
+
+    void validateAndAdd(String guestName, String roomType, BookingRequestQueue queue) {
+
+        try {
+
+            if (guestName == null || guestName.trim().isEmpty()) {
+                throw new IllegalArgumentException("Guest name cannot be empty");
+            }
+
+            if (!inventory.roomExists(roomType)) {
+                throw new IllegalArgumentException("Invalid room type: " + roomType);
+            }
+
+            queue.addRequest(new Reservation(guestName, roomType));
+
+        } catch (Exception e) {
+
+            System.out.println("Booking Validation Failed: " + e.getMessage());
+        }
+    }
+}
+
 /* ---------------- INVENTORY ---------------- */
 
 class RoomInventory {
@@ -59,6 +91,10 @@ class RoomInventory {
 
     void addRoomType(String roomType, int count) {
         inventory.put(roomType, count);
+    }
+
+    boolean roomExists(String roomType) {
+        return inventory.containsKey(roomType);
     }
 
     int getAvailability(String roomType) {
@@ -181,7 +217,7 @@ class ConfirmedReservation {
     }
 }
 
-/* ---------------- BOOKING QUEUE ---------------- */
+/* ---------------- QUEUE ---------------- */
 
 class BookingRequestQueue {
 
